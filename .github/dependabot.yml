@@ -1,0 +1,131 @@
+# =============================================================================
+# .github/dependabot.yml - Configuración de Dependabot
+# =============================================================================
+# Dependabot mantiene tus dependencias actualizadas automáticamente
+# creando Pull Requests cuando hay nuevas versiones disponibles
+# =============================================================================
+
+version: 2
+
+updates:
+  # ═══════════════════════════════════════════════════════════════
+  # GO MODULES
+  # ═══════════════════════════════════════════════════════════════
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Bogota"
+    
+    # Número máximo de PRs abiertos (5 por defecto)
+    open-pull-requests-limit: 10
+    
+    # Estrategia de versioning
+    versioning-strategy: auto
+    
+    # Prefijo para commits y PRs
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    
+    # Labels para los PRs
+    labels:
+      - "dependencies"
+      - "go"
+      - "automated"
+    
+    # Reviewers (opcional - agregar usuarios de tu equipo)
+    reviewers:
+      - "Junior_Jurado"
+      - "edwinscb"
+    
+    # Assignees (opcional)
+    assignees:
+      - "Junior_Jurado"
+      - "edwinscb"
+    
+    # Agrupar updates
+    groups:
+      # Agrupar AWS SDK updates
+      aws-sdk:
+        patterns:
+          - "github.com/aws/aws-sdk-go-v2*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      # Agrupar testing dependencies
+      testing:
+        patterns:
+          - "github.com/stretchr/testify"
+          - "github.com/golang/mock"
+          - "go.uber.org/mock"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Ignorar ciertas dependencias (si es necesario)
+    ignore:
+      # Ejemplo: ignorar major updates de cierta librería
+      # - dependency-name: "github.com/some/package"
+      #   update-types: ["version-update:semver-major"]
+    
+    # Permitir updates en versiones específicas
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+
+  # ═══════════════════════════════════════════════════════════════
+  # GITHUB ACTIONS
+  # ═══════════════════════════════════════════════════════════════
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Bogota"
+    
+    open-pull-requests-limit: 5
+    
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    
+    reviewers:
+      - "Junior_Jurado"
+      - "edwinscb"
+
+  # ═══════════════════════════════════════════════════════════════
+  # DOCKER
+  # ═══════════════════════════════════════════════════════════════
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Bogota"
+    
+    open-pull-requests-limit: 3
+    
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+    
+    reviewers:
+      - "Junior_Jurado"
+      - "edwinscb"
