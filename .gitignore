@@ -1,1 +1,188 @@
+# =============================================================================
+# .gitignore - Smart Bin Orchestrator
+# =============================================================================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+build/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.out
+coverage.html
+.coverage
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Go mod cache
+*.sum.lock
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables
 .env
+.env.*
+!.env.example
+*.env
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Build artifacts
+orchestrator
+!deployments/docker/Dockerfile
+*.tar.gz
+*.zip
+
+# AWS
+.aws/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Docker
+docker-compose.override.yml
+
+# Air (hot reload)
+.air.toml
+tmp/
+
+# Testing
+testdata/
+*.cover
+*.coverprofile
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Local development
+localstack/
+.localstack/
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# CI/CD artifacts
+.github/workflows/secrets/
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Air live reload
+.air/
+
+# Node modules (si usas algún tooling de JS)
+node_modules/
+
+# Python (si usas scripts de Python)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Scripts output
+scripts/output/
+*.ps1
+
+# Backup files
+*.backup
+*.bk

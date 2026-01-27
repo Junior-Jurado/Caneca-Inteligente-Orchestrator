@@ -1,0 +1,263 @@
+# =============================================================================
+# .golangci.yml - Configuración de golangci-lint (WINDOWS COMPATIBLE)
+# =============================================================================
+# Versión optimizada para Windows sin dependencias de herramientas Unix
+# =============================================================================
+
+run:
+  timeout: 5m
+  concurrency: 4
+  tests: true
+  
+  skip-dirs:
+    - vendor
+    - test/fixtures
+    - deployments
+    - scripts
+    - docs
+  
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+  
+  modules-download-mode: readonly
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  path-prefix: ""
+  sort-results: true
+
+# =============================================================================
+# LINTERS - VERSION WINDOWS (sin goimports)
+# =============================================================================
+linters:
+  disable-all: true
+  
+  enable:
+    # ───────────────────────────────────────────────────────────────
+    # BUGS Y ERRORES
+    # ───────────────────────────────────────────────────────────────
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    
+    # ───────────────────────────────────────────────────────────────
+    # ESTILO Y FORMATO (sin goimports - causa problemas en Windows)
+    # ───────────────────────────────────────────────────────────────
+    - gofmt
+    # - goimports  # DESHABILITADO: requiere 'diff' no disponible en Windows
+    - misspell
+    - whitespace
+    - stylecheck
+    
+    # ───────────────────────────────────────────────────────────────
+    # COMPLEJIDAD
+    # ───────────────────────────────────────────────────────────────
+    - gocyclo
+    - gocognit
+    - funlen
+    - lll
+    - nestif
+    
+    # ───────────────────────────────────────────────────────────────
+    # SEGURIDAD
+    # ───────────────────────────────────────────────────────────────
+    - gosec
+    - exportloopref
+    - sqlclosecheck
+    
+    # ───────────────────────────────────────────────────────────────
+    # PERFORMANCE
+    # ───────────────────────────────────────────────────────────────
+    - prealloc
+    - bodyclose
+    
+    # ───────────────────────────────────────────────────────────────
+    # OTROS
+    # ───────────────────────────────────────────────────────────────
+    - unconvert
+    - unparam
+    - dupl
+    - goconst
+    - gocritic
+    - godot
+    - revive
+    - testpackage
+
+# =============================================================================
+# CONFIGURACIÓN DE LINTERS
+# =============================================================================
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104
+  
+  govet:
+    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
+  
+  gocyclo:
+    min-complexity: 15
+  
+  gocognit:
+    min-complexity: 20
+  
+  funlen:
+    lines: 100
+    statements: 50
+  
+  lll:
+    line-length: 120
+    tab-width: 1
+  
+  nestif:
+    min-complexity: 4
+  
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    ignore-tests: true
+  
+  dupl:
+    threshold: 100
+  
+  misspell:
+    locale: US
+  
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+  
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+  
+  stylecheck:
+    checks: ["all", "-ST1000", "-ST1003"]
+    initialisms: ["ACL", "API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS", "SQS", "SNS", "S3", "IoT", "ECS", "ALB", "VPC", "DynamoDB"]
+
+# =============================================================================
+# ISSUES
+# =============================================================================
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+  
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+    
+    - path: \.pb\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - stylecheck
+    
+    - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+      linters:
+        - errcheck
+    
+    - text: 'declaration of "(err|ctx)" shadows declaration at'
+      linters:
+        - govet
+  
+  exclude:
+    - 'declaration of "(err|ctx)" shadows declaration at'
+    - 'G104: Errors unhandled'
+  
+  exclude-use-default: false
+
+severity:
+  default-severity: error
+  case-sensitive: false
+  rules:
+    - linters:
+        - dupl
+      severity: warning
+    - linters:
+        - goconst
+      severity: warning
+    - linters:
+        - misspell
+      severity: warning
+
+# =============================================================================
+# NOTAS PARA WINDOWS:
+# =============================================================================
+# 
+# goimports está DESHABILITADO porque requiere el comando 'diff' que no está
+# disponible en Windows por defecto.
+# 
+# Para habilitar goimports en Windows, tienes 2 opciones:
+# 
+# Opción 1: Instalar Git for Windows (incluye diff)
+#   - Descarga: https://git-scm.com/download/win
+#   - Durante instalación, selecciona "Use Git and optional Unix tools from Command Prompt"
+#   - Reinicia PowerShell
+#   - Descomenta la línea: # - goimports
+# 
+# Opción 2: Usar WSL (Windows Subsystem for Linux)
+#   - Ejecutar golangci-lint desde WSL
+#   - wsl golangci-lint run
+# 
+# Opción 3: Mantener deshabilitado y usar 'gofmt' solamente
+#   - gofmt hace lo mismo pero sin organizar imports automáticamente
+#   - Puedes ejecutar manualmente: go fmt ./...
+# 
+# =============================================================================

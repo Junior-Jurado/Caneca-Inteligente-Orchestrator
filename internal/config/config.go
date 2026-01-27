@@ -1,120 +1,138 @@
+// Package config provides application configuration loading and validation.
+// It reads configuration from environment variables and provides typed access
+// to all service settings including AWS, security, and observability config.
 package config
 
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
-// Config holds all configuration for the application
+// Config holds all configuration for the application.
 type Config struct {
-	Server     ServerConfig
-	AWS        AWSConfig
-	Services   ServicesConfig
-	Security   SecurityConfig
-	Features   FeaturesConfig
+	Server        ServerConfig
+	AWS           AWSConfig
+	Services      ServicesConfig
+	Security      SecurityConfig
+	Features      FeaturesConfig
 	Observability ObservabilityConfig
 }
 
+// ServerConfig contains HTTP server configuration.
 type ServerConfig struct {
-	Port        string
-	Environment string
-	ServiceName string
-	Version     string
+	Port                    string
+	Environment             string
+	ServiceName             string
+	Version                 string
 	GracefulShutdownTimeout time.Duration
 }
 
+// AWSConfig contains all AWS service configurations.
 type AWSConfig struct {
-	Region      string
-	AccountID   string
-	
-	// DynamoDB
+	Region    string
+	AccountID string
+
+	// DynamoDB configuration
 	DynamoDB DynamoDBConfig
-	
-	// S3
+
+	// S3 configuration
 	S3 S3Config
-	
-	// SQS
+
+	// SQS configuration
 	SQS SQSConfig
-	
-	// IoT Core
+
+	// IoT Core configuration
 	IoT IoTConfig
 }
 
+// DynamoDBConfig contains DynamoDB-specific settings.
 type DynamoDBConfig struct {
-	Endpoint        string // For LocalStack
-	TableJobs       string
-	TableDevices    string
+	Endpoint     string // For LocalStack
+	TableJobs    string
+	TableDevices string
 }
 
+// S3Config contains S3-specific settings.
 type S3Config struct {
-	Endpoint            string // For LocalStack
-	BucketImages        string
-	PresignedURLExpiry  time.Duration
+	Endpoint           string // For LocalStack
+	BucketImages       string
+	PresignedURLExpiry time.Duration
 }
 
+// SQSConfig contains SQS queue configurations.
 type SQSConfig struct {
-	Endpoint              string // For LocalStack
+	Endpoint               string // For LocalStack
 	QueueURLClassification string
-	QueueURLDLQ           string
+	QueueURLDLQ            string
 }
 
+// IoTConfig contains AWS IoT Core settings.
 type IoTConfig struct {
 	Endpoint string
 }
 
+// ServicesConfig contains external service URLs and settings.
 type ServicesConfig struct {
 	Classifier ClassifierServiceConfig
 	Decision   DecisionServiceConfig
-	
+
 	UseServiceDiscovery bool
 	DiscoveryNamespace  string
 }
 
+// ClassifierServiceConfig contains classifier service settings.
 type ClassifierServiceConfig struct {
 	URL     string
 	Timeout time.Duration
 }
 
+// DecisionServiceConfig contains decision service settings.
 type DecisionServiceConfig struct {
 	URL     string
 	Timeout time.Duration
 }
 
+// SecurityConfig contains security and authentication settings.
 type SecurityConfig struct {
 	CognitoUserPoolID string
 	CognitoClientID   string
 	JWTSecret         string
-	
-	RateLimit RateLimitConfig
+
+	RateLimit      RateLimitConfig
 	CircuitBreaker CircuitBreakerConfig
 }
 
+// RateLimitConfig contains rate limiting settings.
 type RateLimitConfig struct {
 	Requests int
 	Window   time.Duration
 }
 
+// CircuitBreakerConfig contains circuit breaker settings.
 type CircuitBreakerConfig struct {
 	Timeout     time.Duration
 	MaxRequests uint32
 	Interval    time.Duration
 }
 
+// FeaturesConfig contains feature flags.
 type FeaturesConfig struct {
 	EnableAsyncClassification bool
 	EnableCache               bool
 	EnableTracing             bool
 }
 
+// ObservabilityConfig contains logging and metrics settings.
 type ObservabilityConfig struct {
-	LogLevel     string
-	LogFormat    string
+	LogLevel      string
+	LogFormat     string
 	EnableMetrics bool
-	MetricsPort  string
+	MetricsPort   string
 }
 
-// Load loads configuration from environment variables
+// Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
@@ -167,9 +185,15 @@ func Load() (*Config, error) {
 				Window:   getDurationEnv("RATE_LIMIT_WINDOW", "1m"),
 			},
 			CircuitBreaker: CircuitBreakerConfig{
-				Timeout:     getDurationEnv("CIRCUIT_BREAKER_TIMEOUT", "30s"),
-				MaxRequests: uint32(getIntEnv("CIRCUIT_BREAKER_MAX_REQUESTS", 3)),
-				Interval:    getDurationEnv("CIRCUIT_BREAKER_INTERVAL", "60s"),
+				Timeout: getDurationEnv("CIRCUIT_BREAKER_TIMEOUT", "30s"),
+				MaxRequests: func() uint32 {
+					val := getIntEnv("CIRCUIT_BREAKER_MAX_REQUESTS", 3)
+					if val < 0 {
+						val = 0
+					}
+					return uint32(val)
+				}(),
+				Interval: getDurationEnv("CIRCUIT_BREAKER_INTERVAL", "60s"),
 			},
 		},
 		Features: FeaturesConfig{
@@ -192,46 +216,46 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// Validate validates the configuration
+// Validate validates the configuration.
 func (c *Config) Validate() error {
 	if c.Server.Port == "" {
 		return fmt.Errorf("PORT is required")
 	}
-	
+
 	if c.AWS.Region == "" {
 		return fmt.Errorf("AWS_REGION is required")
 	}
-	
+
 	if c.AWS.DynamoDB.TableJobs == "" {
 		return fmt.Errorf("DYNAMODB_TABLE_JOBS is required")
 	}
-	
+
 	if c.AWS.S3.BucketImages == "" {
 		return fmt.Errorf("S3_BUCKET_IMAGES is required")
 	}
-	
+
 	if c.Services.Classifier.URL == "" {
 		return fmt.Errorf("CLASSIFIER_SERVICE_URL is required")
 	}
-	
+
 	if c.Services.Decision.URL == "" {
 		return fmt.Errorf("DECISION_SERVICE_URL is required")
 	}
-	
+
 	return nil
 }
 
-// IsDevelopment returns true if running in development mode
+// IsDevelopment returns true if running in development mode.
 func (c *Config) IsDevelopment() bool {
 	return c.Server.Environment == "development" || c.Server.Environment == "dev"
 }
 
-// IsProduction returns true if running in production mode
+// IsProduction returns true if running in production mode.
 func (c *Config) IsProduction() bool {
 	return c.Server.Environment == "production" || c.Server.Environment == "prod"
 }
 
-// UseLocalStack returns true if configured to use LocalStack
+// UseLocalStack returns true if configured to use LocalStack.
 func (c *Config) UseLocalStack() bool {
 	return c.AWS.DynamoDB.Endpoint != "" || c.AWS.S3.Endpoint != ""
 }
@@ -247,8 +271,7 @@ func getEnv(key, defaultValue string) string {
 
 func getIntEnv(key string, defaultValue int) int {
 	if value := os.Getenv(key); value != "" {
-		var intValue int
-		if _, err := fmt.Sscanf(value, "%d", &intValue); err == nil {
+		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
 		}
 	}
@@ -262,12 +285,17 @@ func getBoolEnv(key string, defaultValue bool) bool {
 	return defaultValue
 }
 
-func getDurationEnv(key string, defaultValue string) time.Duration {
+func getDurationEnv(key, defaultValue string) time.Duration {
 	valueStr := getEnv(key, defaultValue)
 	duration, err := time.ParseDuration(valueStr)
 	if err != nil {
 		// Fallback to default if parsing fails
-		duration, _ = time.ParseDuration(defaultValue)
+		defaultDuration, parseErr := time.ParseDuration(defaultValue)
+		if parseErr != nil {
+			// If even default fails, return 0
+			return 0
+		}
+		return defaultDuration
 	}
 	return duration
 }

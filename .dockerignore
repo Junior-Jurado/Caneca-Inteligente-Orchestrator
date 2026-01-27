@@ -1,0 +1,77 @@
+# =============================================================================
+# .dockerignore - Archivos a excluir del contexto de Docker
+# =============================================================================
+# Esto mejora el tiempo de build y reduce el tamaño de la imagen
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+docs/
+LICENSE
+
+# Tests
+test/
+*_test.go
+.coverage
+coverage.out
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Environment files
+.env
+.env.*
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+bin/
+dist/
+build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependencies (se descargarán durante el build)
+vendor/
+
+# Scripts de desarrollo
+scripts/local-dev.sh
+scripts/test.sh
+docker-compose.yml
+docker-compose.*.yml
+Makefile
+
+# Terraform y deployment
+deployments/
+infra/
+*.tf
+*.tfvars
+*.tfstate
+*.tfstate.backup
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
