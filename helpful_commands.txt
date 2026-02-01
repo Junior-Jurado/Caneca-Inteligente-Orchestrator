@@ -1,0 +1,7 @@
+aws configure list-profiles
+aws configure --profile personal
+
+aws sts get-caller-identity --profile smartbin
+aws sts get-caller-identity --profile personal
+
+aws s3 cp dist/lambda.zip s3://smartbin-dev-orchestrator-lambda/lambda-latest.zip --region us-east-1 --profile smartbin

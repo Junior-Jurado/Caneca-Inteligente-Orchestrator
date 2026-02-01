@@ -43,32 +43,6 @@ func NewDevicesHandler(cfg *config.Config) *DevicesHandler {
 
 // RegisterDevice handles device registration requests.
 // It creates a new IoT device, generates certificates, and stores device info.
-//
-// Request Body:
-//
-//	{
-//	  "device_id": "smart-bin-001",
-//	  "device_type": "smart_bin_v1",
-//	  "location": {
-//	    "building": "Edificio A",
-//	    "floor": 2,
-//	    "area": "Cafeteria"
-//	  },
-//	  "bin_type": "recyclable"
-//	}
-//
-// Response (201 Created):
-//
-//	{
-//	  "success": true,
-//	  "data": {
-//	    "device_id": "smart-bin-001",
-//	    "device_type": "smart_bin_v1",
-//	    "status": "active",
-//	    "certificate": "-----BEGIN CERTIFICATE-----...",
-//	    "created_at": "2026-01-21T10:30:00Z"
-//	  }
-//	}
 func (h *DevicesHandler) RegisterDevice(c *gin.Context) {
 	// ───────────────────────────────────────────────────────────────
 	// 1. PARSEAR Y VALIDAR REQUEST
@@ -334,7 +308,7 @@ func (h *DevicesHandler) getMockDevices() []*models.Device {
 		},
 		{
 			DeviceID:   "smart-bin-003",
-			DeviceType: "smart_bin_v2",
+			DeviceType: "smart_bin_v1",
 			Status:     models.DeviceStatusMaintenance,
 			BinType:    "general",
 			CreatedAt:  time.Now().Add(-12 * time.Hour),

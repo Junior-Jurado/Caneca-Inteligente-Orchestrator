@@ -5,6 +5,8 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"math"
 	"os"
 	"strconv"
 	"time"
@@ -298,4 +300,26 @@ func getDurationEnv(key, defaultValue string) time.Duration {
 		return defaultDuration
 	}
 	return duration
+}
+
+// Validar antes de convertir.
+func getEnvAsUint32(key string, defaultVal uint32) uint32 {
+	valStr := os.Getenv(key)
+	if valStr == "" {
+		return defaultVal
+	}
+
+	val, err := strconv.ParseInt(valStr, 10, 64)
+	if err != nil {
+		return defaultVal
+	}
+
+	// Validar rango para uint32
+	if val < 0 || val > math.MaxUint32 {
+		log.Printf("Warning: %s value %d out of range, using default %d",
+			key, val, defaultVal)
+		return defaultVal
+	}
+
+	return uint32(val)
 }

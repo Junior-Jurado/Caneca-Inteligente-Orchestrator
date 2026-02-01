@@ -25,7 +25,7 @@ const (
 	DecisionActionManualReview DecisionAction = "manual_review"
 )
 
-// }.
+// Decision - Representa la decisión tomada por el servicio de reglas.
 type Decision struct {
 	// ═══════════════════════════════════════════════════════════════
 	// DECISIÓN PRINCIPAL

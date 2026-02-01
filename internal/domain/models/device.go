@@ -39,13 +39,13 @@ const (
 type DeviceType string
 
 const (
-	// Versión 1 del Smart Bin.
+	// DeviceTypeSmartBinV1 represents version 1 of the Smart Bin.
 	DeviceTypeSmartBinV1 DeviceType = "smart_bin_v1"
 
-	// Versión 2 del Smart Bin (con más sensors).
+	// DeviceTypeSmartBinV2 represents version 2 of the Smart Bin.
 	DeviceTypeSmartBinV2 DeviceType = "smart_bin_v2"
 
-	// Smart Bin industrial (mayor capacidad).
+	// DeviceTypeSmartBinIndustrial represents major capacity.
 	DeviceTypeSmartBinIndustrial DeviceType = "smart_bin_industrial"
 )
 
@@ -239,7 +239,7 @@ func (d *Device) IsActive() bool {
 	return d.Status == DeviceStatusActive
 }
 
-// Se considera online si se conectó en los últimos 5 minutos.
+// IsOnline Se considera online si se conectó en los últimos 5 minutos.
 func (d *Device) IsOnline() bool {
 	if d.LastSeen == nil {
 		return false

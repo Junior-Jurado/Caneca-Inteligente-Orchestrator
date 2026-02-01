@@ -43,7 +43,8 @@ func NewJobsHandler(cfg *config.Config) *JobsHandler {
 	}
 }
 
-// ENDPOINT: POST /api/v1/jobs.
+// CreateJob creates a new waste classification job and returns a presigned URL for image upload.
+// ENDPOINT: POST /api/v1/jobs
 func (h *JobsHandler) CreateJob(c *gin.Context) {
 	// ───────────────────────────────────────────────────────────────
 	// 1. PARSEAR Y VALIDAR REQUEST
@@ -78,9 +79,8 @@ func (h *JobsHandler) CreateJob(c *gin.Context) {
 		DeviceID:  req.DeviceID,
 		Status:    models.JobStatusPending,
 		ImageKey:  h.generateImageKey(req.DeviceID, jobID),
-		Metadata:  req.Metadata,
 		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		// Metadata y UpdatedAt se agregarán cuando implementemos el repository
 	}
 
 	// ───────────────────────────────────────────────────────────────
@@ -117,29 +117,8 @@ func (h *JobsHandler) CreateJob(c *gin.Context) {
 	})
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// GetJob retrieves a classification job by its ID.
 // ENDPOINT: GET /api/v1/jobs/:job_id
-// ═══════════════════════════════════════════════════════════════════
-// Obtiene un job por su ID
-//
-// Response (200 OK):
-//
-//	{
-//	  "success": true,
-//	  "data": {
-//	    "job_id": "job_abc123",
-//	    "device_id": "smart-bin-001",
-//	    "status": "completed",
-//	    "classification": {
-//	      "label": "plastic_bottle",
-//	      "confidence": 0.94
-//	    },
-//	    "decision": {
-//	      "action": "accept",
-//	      "bin_compartment": "recyclable"
-//	    }
-//	  }
-//	}
 func (h *JobsHandler) GetJob(c *gin.Context) {
 	// ───────────────────────────────────────────────────────────────
 	// 1. OBTENER JOB ID DEL PATH
@@ -167,7 +146,8 @@ func (h *JobsHandler) GetJob(c *gin.Context) {
 	})
 }
 
-/* ENDPOINT: GET /api/v1/jobs. */
+// ListJobs returns a paginated list of classification jobs with optional filters.
+// ENDPOINT: GET /api/v1/jobs
 func (h *JobsHandler) ListJobs(c *gin.Context) {
 	// 1. PARSEAR QUERY PARAMETERS
 	var req models.ListJobsRequest
@@ -219,12 +199,10 @@ func (h *JobsHandler) ListJobs(c *gin.Context) {
 	})
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// UpdateJob updates a job's status and classification results.
 // ENDPOINT: PATCH /api/v1/jobs/:job_id
-// ═══════════════════════════════════════════════════════════════════
-// Actualiza un job (usado internamente por callbacks)
-
 func (h *JobsHandler) UpdateJob(c *gin.Context) {
+
 	// jobID := c.Param("job_id")
 
 	c.JSON(http.StatusNotImplemented, gin.H{
@@ -237,11 +215,8 @@ func (h *JobsHandler) UpdateJob(c *gin.Context) {
 	})
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// DeleteJob removes a classification job from the system.
 // ENDPOINT: DELETE /api/v1/jobs/:job_id
-// ═══════════════════════════════════════════════════════════════════
-// Elimina un job
-
 func (h *JobsHandler) DeleteJob(c *gin.Context) {
 	// jobID := c.Param("job_id")
 

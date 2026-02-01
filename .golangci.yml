@@ -122,7 +122,7 @@ linters-settings:
     statements: 50
   
   lll:
-    line-length: 120
+    line-length: 140
     tab-width: 1
   
   nestif:
