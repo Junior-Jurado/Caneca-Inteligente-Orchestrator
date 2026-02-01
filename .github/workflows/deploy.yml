@@ -1,0 +1,172 @@
+# =============================================================================
+# GITHUB ACTIONS - BUILD & DEPLOY TO AWS ECS
+# =============================================================================
+# Este workflow:
+#   1. Construye la imagen Docker del Orchestrator
+#   2. La sube a Amazon ECR
+#   3. Actualiza el servicio ECS para usar la nueva imagen
+# =============================================================================
+
+name: Build and Deploy to AWS
+
+on:
+  # Trigger manual desde GitHub UI
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+  # Trigger automático en push a main
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'cmd/**'
+      - 'internal/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+      - '.github/workflows/deploy.yml'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: smartbin-dev-service
+  ECS_CLUSTER: smartbin-dev-cluster
+  ECS_SERVICE: smartbin-dev-orchestrator
+  CONTAINER_NAME: orchestrator
+
+jobs:
+  # ===========================================================================
+  # JOB 1: BUILD AND TEST
+  # ===========================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Build binary (test compilation)
+        run: go build -v ./cmd/server/main.go
+
+      # - name: Run tests
+      #   run: go test -v -race -coverprofile=coverage.out ./...
+
+  # ===========================================================================
+  # JOB 2: BUILD AND PUSH DOCKER IMAGE
+  # ===========================================================================
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build the docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+          # Push both tags
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Output the image URI
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+          echo "Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
+  # ===========================================================================
+  # JOB 3: DEPLOY TO ECS
+  # ===========================================================================
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition smartbin-dev-orchestrator \
+            --query taskDefinition > task-definition.json
+
+      - name: Update task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ needs.build-and-push.outputs.image }}
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Deployment Summary
+        run: |
+          echo "=========================================="
+          echo "DEPLOYMENT SUCCESSFUL!"
+          echo "=========================================="
+          echo "Cluster: ${{ env.ECS_CLUSTER }}"
+          echo "Service: ${{ env.ECS_SERVICE }}"
+          echo "Image: ${{ needs.build-and-push.outputs.image }}"
+          echo ""
+          echo "API URL: http://smartbin-dev-alb-871239792.us-east-1.elb.amazonaws.com"
+          echo "=========================================="
