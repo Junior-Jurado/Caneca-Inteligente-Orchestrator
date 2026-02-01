@@ -41,9 +41,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -o orchestrator \
     ./cmd/server/main.go
 
-# Verificar que el binario existe y funciona
-RUN ls -lh /build/orchestrator && \
-    /build/orchestrator --help || echo "Binary compiled successfully"
+# Verificar que el binario existe
+RUN ls -lh /build/orchestrator && echo "Binary compiled successfully"
 
 # -----------------------------------------------------------------------------
 # STAGE 2: RUNTIME
